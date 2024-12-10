@@ -5,7 +5,7 @@ from tqdm import tqdm
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock, Event
-
+import time
 class FileDownloader:
     def __init__(self, db_manager, output_folder, max_threads, retry_limit):
         self.db_manager = db_manager
@@ -19,6 +19,7 @@ class FileDownloader:
         os.makedirs(output_folder, exist_ok=True)
         
     def download_file(self, download_id, url, retry_count):
+        start_time = time.time()
         local_filename = os.path.join(self.output_folder, os.path.basename(url))
         self.download_states[download_id] = "running"
         self.pause_events[download_id] = Event()
@@ -41,7 +42,12 @@ class FileDownloader:
                             raise Exception("Download stopped by user.")
                         file.write(chunk)
                         progress.update(len(chunk))
-
+                    end_time = time.time()
+                    total_time = end_time - start_time
+                    total_mins = int(total_time // 60)
+                    total_secs = int(total_time % 60)
+                    total_millisecs = int((total_time - total_secs) * 1000)
+                    print(f"Download {download_id} for {url} completed in\n {total_mins} minutes and {total_secs} seconds and {total_millisecs} milliseconds.")
             with self.lock:
                 self.db_manager.update_download(download_id, 'Completed', local_filename)
         except Exception as e:
@@ -82,3 +88,4 @@ class FileDownloader:
         while not self.tasks.empty():
             download_id, url, retry_count = self.tasks.get()
             self.executor.submit(self.download_file, download_id, url, retry_count)
+   

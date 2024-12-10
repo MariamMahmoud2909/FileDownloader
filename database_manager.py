@@ -1,9 +1,11 @@
 import pyodbc
+from threading import Lock
 
 class DatabaseManager:
     
     def __init__(self, connection_string):
         self.connection = pyodbc.connect(connection_string)
+        self.lock = Lock() 
         self.create_tables()
         
     def connect(self):
@@ -32,7 +34,8 @@ class DatabaseManager:
             self.connection.commit()
 
     def add_download(self, url):
-        with self.connection.cursor() as cursor:
+        with self.lock:
+         with self.connection.cursor() as cursor:
             cursor.execute("INSERT INTO Downloads (url, status) VALUES (?, 'Pending')", url)
             self.connection.commit()
 

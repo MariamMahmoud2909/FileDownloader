@@ -4,6 +4,7 @@ from file_downloader import FileDownloader
 from config import CONNECTION_STRING
 import tkinter as tk
 import threading
+import re
 
 class FileDownloaderApp:
     
@@ -37,7 +38,8 @@ class FileDownloaderApp:
            
     def add_url(self):
         url = self.url_var.get().strip()
-        if url:
+        url_regex = re.compile(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)')
+        if url and re.fullmatch(url_regex,url):
             self.db_manager.add_download(url)
             self.url_var.set("")
             self.load_queue()
