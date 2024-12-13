@@ -27,7 +27,7 @@ class DatabaseManager:
                     url nvarchar(max) not null,
                     status nvarchar(50) not null,
                     file_path nvarchar(max),
-                    retry_count int default 0
+                    retry_count int default 3
                 )
             end
         """)

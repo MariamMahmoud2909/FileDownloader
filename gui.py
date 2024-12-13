@@ -1,4 +1,7 @@
-from tkinter import Tk, Label, Entry, Button, Listbox, StringVar, messagebox, END
+import random
+import time
+from tkinter import Tk, Label, Entry, Button, Listbox, StringVar, Toplevel, messagebox, END, simpledialog, ttk
+import winsound
 from database_manager import DatabaseManager
 from file_downloader import FileDownloader
 from config import CONNECTION_STRING
@@ -13,9 +16,14 @@ class FileDownloaderApp:
         
         self.db_manager = DatabaseManager(CONNECTION_STRING)
         output_folder = "C:/Downloads"  
-        max_threads = 8  # number of threads for concurrency
-        retry_limit = 3  
-        self.file_downloader = FileDownloader(self.db_manager, output_folder, max_threads, retry_limit)
+        
+        self.use_multithreading = False
+        self.max_threads = 1  # number of threads for concurrency
+        self.retry_limit = 3  
+        
+        self.file_downloader = FileDownloader(self.db_manager, output_folder, self.max_threads, self.retry_limit)
+        
+        self.setup_dialog()
         
         self.home.title("File Downloader App")
         self.home.geometry("700x600")
@@ -35,6 +43,15 @@ class FileDownloaderApp:
         self.queue_listbox.place(x=50, y=150)
         
         self.load_queue()
+
+    def setup_dialog(self):
+        response = messagebox.askyesno("Multithreading", "Do you want to use multithreading for downloads?")
+        if response:
+            self.use_multithreading = True
+            self.max_threads = simpledialog.askinteger("Threads", "Enter the number of threads to use (1-8):", minvalue=1, maxvalue=8)
+        else:
+            self.use_multithreading = False
+            self.max_threads = 1
            
     def add_url(self):
         url = self.url_var.get().strip()
@@ -54,13 +71,13 @@ class FileDownloaderApp:
         
         for download_id, url, retry_count in pending_downloads:
             item_text = f"ID {download_id}: {url} (Retry: {retry_count})"
-            self.queue_listbox.insert(END, item_text)
+            self.queue_listbox.insert(tk.END, item_text)
             
-            btn_frame = tk.Frame(self.home, bg="#148483")
+            #btn_frame = tk.Frame(self.home, bg="#148483")
             #tk.Button(btn_frame, text="Pause", command=lambda id=download_id: self.pause_download(id)).pack(side="left")
             #tk.Button(btn_frame, text="Resume", command=lambda id=download_id: self.resume_download(id)).pack(side="left")
             #tk.Button(btn_frame, text="Remove", command=lambda id=download_id: self.remove_download(id)).pack(side="left")
-            btn_frame.pack()
+            #btn_frame.pack()
     
     def pause_download(self, download_id):
         self.file_downloader.pause_download(download_id)
@@ -81,11 +98,45 @@ class FileDownloaderApp:
 
     def _start_downloads(self):
         pending_downloads = self.db_manager.get_pending_downloads()
+        if not pending_downloads:
+            messagebox.showinfo("No Downloads", "No pending downloads in the queue.")
+            return
+        progress_windows = []
         for download_id, url, retry_count in pending_downloads:
-            self.file_downloader.tasks.put((download_id, url, retry_count))
+            progress_window = self.create_progress_window(download_id, url)
+            progress_windows.append((progress_window, download_id, url, retry_count))
+        
+        for progress_window, download_id, url, retry_count in progress_windows:
+            threading.Thread(target=self.download_file, args=(download_id, url, retry_count, progress_window), daemon=True).start()
+
         self.file_downloader.start_downloading()
         self.load_queue()
-        messagebox.showinfo("Downloads Completed", "All downloads have finished successfully!")
+        messagebox.showinfo("Downloads Completed", "All downloads have finished!")
+
+    def create_progress_window(self, download_id, url):
+        progress_window = Toplevel(self.home)
+        progress_window.title(f"Download {download_id}")
+        progress_window.geometry(f"300x100+{random.randint(100, 500)}+{random.randint(100, 500)}")
+        Label(progress_window, text=f"Downloading: {url}", wraplength=250).pack(pady=10)
+        progress_bar = ttk.Progressbar(progress_window, mode="determinate", length=250)
+        progress_bar.pack(pady=10)
+        progress_bar["value"] = 0
+        progress_window.progress_bar = progress_bar
+        return progress_window
+
+    def download_file(self, download_id, url, retry_count, progress_window):
+        try:
+            for i in range(100):  # Simulate download progress
+                time.sleep(random.uniform(0.05, 0.1))
+                progress_window.progress_bar["value"] = i + 1
+                progress_window.update_idletasks()
+            self.db_manager.mark_completed(download_id)
+        except Exception as e:
+            self.db_manager.mark_failed(download_id)
+            winsound.Beep(1000, 500)  # Sound on failure (Windows only)
+        finally:
+            time.sleep(5)
+            progress_window.destroy()
 
     def view_history(self):
         history = self.db_manager.get_download_history()
