@@ -44,15 +44,14 @@ class FileDownloaderApp:
         self.queue_listbox = Listbox(home, width=100, height=15)
         self.queue_listbox.place(x=50, y=150)
         
-        self.load_queue()# Load pending downloads into the queue
-      
+        self.load_queue()# Load pending downloads into the queue  
       
     def setup_dialog(self):
         """Configures whether downloads will use multithreading or download using a single thread."""
         response = messagebox.askyesno("Multithreading", "Do you want to use multithreading for downloads?")
         if response:
             self.use_multithreading = True
-            self.max_threads = simpledialog.askinteger("Threads", "Enter the number of threads to use (1-8):", minvalue=1, maxvalue=8)
+            self.max_threads = simpledialog.askinteger("Threads", "Enter the number of threads to use (2-8):", minvalue=2, maxvalue=8)
             if self.max_threads is None:  # User cancels during thread selection
                 self.home.destroy()       # If the user cancels, close the application
                 return
@@ -80,7 +79,6 @@ class FileDownloaderApp:
         for download_id, url, retry_count in pending_downloads:
             item_text = f"ID {download_id}: {url} (Retry: {retry_count})"
             self.queue_listbox.insert(tk.END, item_text)
-
     
     def start_downloads(self): 
         """Starts the download process in a separate thread

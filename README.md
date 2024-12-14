@@ -34,7 +34,7 @@ pip install requests tqdm
 Modify the CONNECTION_STRING in the config.py file to point to the appropriate database.
 
 ## Multithreading
-When starting the app, you can enable multithreading for faster downloads. You will be prompted to specify the number of threads (1-8).
+When starting the app, you can enable multithreading for faster downloads. You will be prompted to specify the number of threads (2-8).
 
 ## Modules
 
@@ -55,3 +55,5 @@ Update download status (completed, failed).
 4. config.py
 Stores configuration details: CONNECTION_STRING.
 
+## Documentation:
+https://docs.google.com/document/d/12W8Hu7kp2XlKdSB5Lp4BpgVchHHi6pooO-GthzFKIDU/edit?usp=sharing
