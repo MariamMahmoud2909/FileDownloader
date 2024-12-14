@@ -1,16 +1,15 @@
 import random
 import time
-from tkinter import Tk, Label, Entry, Button, Listbox, StringVar, Toplevel, messagebox, END, simpledialog, ttk
 import winsound
-from database_manager import DatabaseManager
-from file_downloader import FileDownloader
-from config import CONNECTION_STRING
 import tkinter as tk
 import threading
 import re
+from tkinter import Tk, Label, Entry, Button, Listbox, StringVar, Toplevel, messagebox, END, simpledialog, ttk
+from database_manager import DatabaseManager
+from file_downloader import FileDownloader
+from config import CONNECTION_STRING
 
 class FileDownloaderApp:
-    
     """Handles the graphical user interface using Tkinter, and integrates database and downloading functionalities."""
     
     def __init__(self, home):
@@ -24,7 +23,7 @@ class FileDownloaderApp:
         self.retry_limit = 3  
         
         self.file_downloader = FileDownloader(self.db_manager, output_folder, self.max_threads, self.retry_limit)
-        
+    
         self.setup_dialog()
         
         self.home = home        
@@ -46,7 +45,7 @@ class FileDownloaderApp:
         self.queue_listbox.place(x=50, y=150)
         
         self.load_queue()
-
+           
     def setup_dialog(self):
         """Configures whether downloads will use multithreading or download using a single thread."""
         
@@ -54,10 +53,13 @@ class FileDownloaderApp:
         if response:
             self.use_multithreading = True
             self.max_threads = simpledialog.askinteger("Threads", "Enter the number of threads to use (1-8):", minvalue=1, maxvalue=8)
+            if self.max_threads is None:  # User cancels during thread selection
+                self.home.destroy()
+                return
         else:
             self.use_multithreading = False
             self.max_threads = 1
-           
+            
     def add_url(self):
         """Handles adding URLs to the download queue. Uses a Regex to check for the URL validity"""
         

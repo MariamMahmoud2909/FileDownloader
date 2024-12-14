@@ -1,10 +1,8 @@
 # Database Configurations
 
 DB_CONFIG = {
-    'server': 'DESKTOP-OAE4SOD',
+    'server': 'DESKTOP-9UUO4AR',
     'database': 'FileDownloader',
-    'username': 'DESKTOP-OAE4SOD\\Ahmed',
-    'password': '123',
     'driver': '{ODBC Driver 17 for SQL Server}'
 }
 
