@@ -35,7 +35,7 @@ Modify the CONNECTION_STRING in the config.py file to point to the appropriate d
 
 ##Multithreading
 When starting the app, you can enable multithreading for faster downloads. You will be prompted to specify the number of threads (1-8).
-
+---
 ## Modules
 
 1. FileDownloaderApp (GUI)
