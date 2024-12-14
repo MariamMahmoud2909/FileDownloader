@@ -10,10 +10,10 @@ from file_downloader import FileDownloader
 from config import CONNECTION_STRING
 
 class FileDownloaderApp:
-    """Handles the graphical user interface using Tkinter, and integrates database and downloading functionalities."""
-    
+   
+    #Handles the GUI using Tkinter, and integrates database and downloading functionalities.
     def __init__(self, home):
-        """ Initializes the application, sets up the GUI, and integrates supporting modules."""
+        """Initializes the application, sets up the GUI, and integrates supporting modules."""
         
         self.db_manager = DatabaseManager(CONNECTION_STRING)
         output_folder = "C:/Downloads"  
@@ -44,25 +44,24 @@ class FileDownloaderApp:
         self.queue_listbox = Listbox(home, width=100, height=15)
         self.queue_listbox.place(x=50, y=150)
         
-        self.load_queue()
-           
+        self.load_queue()# Load pending downloads into the queue
+      
+      
     def setup_dialog(self):
         """Configures whether downloads will use multithreading or download using a single thread."""
-        
         response = messagebox.askyesno("Multithreading", "Do you want to use multithreading for downloads?")
         if response:
             self.use_multithreading = True
             self.max_threads = simpledialog.askinteger("Threads", "Enter the number of threads to use (1-8):", minvalue=1, maxvalue=8)
             if self.max_threads is None:  # User cancels during thread selection
-                self.home.destroy()
+                self.home.destroy()       # If the user cancels, close the application
                 return
         else:
             self.use_multithreading = False
             self.max_threads = 1
-            
-    def add_url(self):
-        """Handles adding URLs to the download queue. Uses a Regex to check for the URL validity"""
-        
+    
+    def add_url(self):    
+        """Handles adding URLs to the download queue. Uses a Regex to check for the URL validity"""         
         url = self.url_var.get().strip()
         url_regex = re.compile(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)')
         if url and re.fullmatch(url_regex,url):
@@ -73,24 +72,27 @@ class FileDownloaderApp:
         else:
             messagebox.showerror("Error", "Please enter a valid URL.")
 
-    def load_queue(self):
+    def load_queue(self): 
         """Fetches pending downloads from the database and populates the queue listbox."""
-        
-        self.queue_listbox.delete(0, END)
+        self.queue_listbox.delete(0, END)# Clear the current queue display
         pending_downloads = self.db_manager.get_pending_downloads()
         
         for download_id, url, retry_count in pending_downloads:
             item_text = f"ID {download_id}: {url} (Retry: {retry_count})"
             self.queue_listbox.insert(tk.END, item_text)
 
-    def start_downloads(self):
+    
+    def start_downloads(self): 
+        """Starts the download process in a separate thread
+        Target (_start_downloads): Specifies which method to execute in the new thread.
+        (daemon=True): The thread will automatically terminate when the main program exits"""
         threading.Thread(target=self._start_downloads, daemon=True).start()
 
+   
     def _start_downloads(self):
-        """Starts the download process:"""
-        """- Opens a new progress bar window for each download (if it is a multithreaded download).
-           - Distributes downloads based on threading settings."""
-        
+        """Starts the download process:
+        - Opens a new progress bar window for each download (if it is a multithreaded download).
+        - Distributes downloads based on threading settings."""
         pending_downloads = self.db_manager.get_pending_downloads()
         if not pending_downloads:
             messagebox.showinfo("No Downloads", "No pending downloads in the queue.")
@@ -99,13 +101,12 @@ class FileDownloaderApp:
         for download_id, url, retry_count in pending_downloads:
             progress_window = self.create_progress_window(download_id, url)
             progress_windows.append((progress_window, download_id, url, retry_count))
-        
         for progress_window, download_id, url, retry_count in progress_windows:
             threading.Thread(target=self.download_file, args=(download_id, url, retry_count, progress_window), daemon=True).start()
 
         self.file_downloader.start_downloading()
         self.load_queue()
-        messagebox.showinfo("Downloads Completed", "All downloads have finished!")
+        #messagebox.showinfo("Downloads Completed", "All downloads have finished!")
 
     def create_progress_window(self, download_id, url):
         """Uses progress bars to display download status."""
@@ -122,6 +123,7 @@ class FileDownloaderApp:
     def download_file(self, download_id, url, retry_count, progress_window):
         """Simultaes the download Progress, marks downloads as completed or failed based on the outcome."""
         try:
+           # Simulate downloading with a progress bar update
             for i in range(100): 
                 time.sleep(random.uniform(0.05, 0.1))
                 progress_window.progress_bar["value"] = i + 1
@@ -131,12 +133,12 @@ class FileDownloaderApp:
             self.db_manager.mark_failed(download_id)
             winsound.Beep(1000, 500) 
         finally:
+             # Close the progress window after the download finishes
             time.sleep(5)
             progress_window.destroy()
 
     def view_history(self):
         """Opens a window displaying the download history with success and failure details."""
-        
         history = self.db_manager.get_download_history()
         history_window = Tk()
         
