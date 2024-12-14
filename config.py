@@ -1,4 +1,5 @@
-# db configurations
+# Database Configurations
+
 DB_CONFIG = {
     'server': 'DESKTOP-OAE4SOD',
     'database': 'FileDownloader',

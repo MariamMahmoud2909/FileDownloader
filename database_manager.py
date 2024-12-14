@@ -2,10 +2,11 @@ import pyodbc
 from threading import Lock
 
 class DatabaseManager:
+    """Handles all database-related operations for managing file downloads"""
     
     def __init__(self, connection_string):
         self.connection = pyodbc.connect(connection_string)
-        self.lock = Lock() 
+        self.lock = Lock() #synchronizes access to the database, ensuring that only one thread interacts with the database at a time.
         self.create_tables()
         
     def connect(self):
