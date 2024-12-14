@@ -28,6 +28,7 @@ It supports multithreading to enhance download speed and efficiency.
 Install dependencies via pip:
 ```bash
 pip install requests tqdm
+```
 
 ## Configuration
 Modify the CONNECTION_STRING in the config.py file to point to the appropriate database.
