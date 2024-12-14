@@ -97,6 +97,10 @@ class FileDownloaderApp:
         if not pending_downloads:
             messagebox.showinfo("No Downloads", "No pending downloads in the queue.")
             return
+         # Add pending downloads to the FileDownloader tasks queue 
+        for download_id, url, retry_count in pending_downloads:
+            self.file_downloader.tasks.put((download_id, url, retry_count))
+
         progress_windows = []
         for download_id, url, retry_count in pending_downloads:
             progress_window = self.create_progress_window(download_id, url)
@@ -128,7 +132,7 @@ class FileDownloaderApp:
                 time.sleep(random.uniform(0.05, 0.1))
                 progress_window.progress_bar["value"] = i + 1
                 progress_window.update_idletasks()
-            self.db_manager.mark_completed(download_id)
+            #self.db_manager.mark_completed(download_id)
         except Exception as e:
             self.db_manager.mark_failed(download_id)
             winsound.Beep(1000, 500) 
